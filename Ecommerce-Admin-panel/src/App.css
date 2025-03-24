@@ -1,0 +1,84 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8efe1;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ddd;
+}
+button.active {
+  background: oldlace;
+  border-radius: 7px;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-weight: 500;
+}
+.add-productbtn{
+  text-align: right;
+
+}
+.active{
+  background-color: cornflowerblue;
+}
+table.admintable {
+  width: 100%;
+  text-align: center;
+}
+/* .add-productbtn button {
+  border: none;
+  border-radius: 5px;
+  /* text-align: right; */
+
+
+  span.addsighn {
+    font-size: 18px;
+    padding: 0px;
+    /* text-align: center; */
+    font-weight: 700;
+}
+.add-productbtn-row{
+  text-align: right;
+}
+
+td.product-data {
+  font-size: smaller;
+  font-weight: 500;
+  padding: 3px;
+}
+.product-data button {
+  background: none;
+  border: none;
+  font-size: large;
+}
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 30px;
+  margin-right: 5px;
+}
+
+.logo-text {
+  font-family: serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-family: monospace;
+  color: #333;
+  font-size: 14px;
+}
+
+.nav-link:hover {
+  color: #666;
+}

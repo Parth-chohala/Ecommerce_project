@@ -1,0 +1,255 @@
+/* 🚚 Truck - disappear and re-enter animation */
+/* Fade up animation */
+/* Initial hidden state */
+.quantity-input {
+  width: 60px;
+  padding: 4px 8px;
+  text-align: center;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  margin-right: 25px;
+}
+.review-tile {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* Fade-in effect when in view */
+.review-tile.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nav-link {
+  color: #333 !important; /* Default color */
+  text-decoration: none; /* Remove underline */
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: #007bff !important; /* Hover color */
+}
+
+.nav-link.active {
+  color: #007bff !important; /* Active color */
+  font-weight: 600;
+  border-bottom: 2px solid #007bff; /* Optional: underline active */
+}
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.6s ease-out forwards;
+  opacity: 0; /* Important to start hidden */
+}
+
+
+.hover-animate:hover .truck-icon {
+  animation: truck-loop 1.2s ease-in-out forwards;
+}
+
+@keyframes truck-loop {
+  0% { transform: translateX(0); opacity: 1; }
+  40% { transform: translateX(150%); opacity: 0; }
+  60% { transform: translateX(-150%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* 🔄 Sync icon rotation */
+.hover-animate:hover .sync-icon {
+  transform: rotate(360deg);
+  transition: transform 0.6s ease-in-out;
+}
+
+/* 🛡️ Shield icon expand */
+.hover-animate:hover .shield-icon {
+  transform: scale(1.2);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Smooth reset for all icons */
+.truck-icon, .sync-icon, .shield-icon {
+  display: inline-block;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.fade-in-out-scroll {
+  opacity: 1 !important;
+  /* opacity: 0; */
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in-out-scroll.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-out-scroll.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Scrolling Wrapper */
+.scrolling-wrapper {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrolling-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Product card */
+.product-card {
+  scroll-snap-align: center;
+  will-change: transform;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+}
+
+
+.scrolling-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent;
+}
+
+.scrolling-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrolling-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrolling-wrapper::-webkit-scrollbar-thumb {
+  background-color: #bbb;
+  border-radius: 20px;
+}
+
+/* Fade-in scroll animation */
+.fade-in-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease-out;
+}
+
+.fade-in-scroll.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Image wrapping for proper aspect ratio */
+.img-wrap {
+  background: #f8f8f8;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Price text */
+.price {
+  font-size: 1rem;
+}
+
+/* Truncate long product names */
+.card-title.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Fade-in and fade-out animation */
+.fade-in-out-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in-out-scroll.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-out-scroll.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Review card responsiveness and spacing */
+.card-body h6 {
+  font-weight: 600;
+}
+
+.card-body .fa-star {
+  margin-right: 2px;
+}
+/* Fade-in and fade-out animation */
+.fade-in-out-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in-out-scroll.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-out-scroll.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Review Card Enhancements */
+.card-body h6 {
+  font-weight: 600;
+}
+
+.card-body .fa-star {
+  margin-right: 2px;
+}
+/* Fade-in and fade-out on scroll */
+.fade-in-out-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in-out-scroll.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-out-scroll.fade-out {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Scrolling Wrapper */
+.scrolling-wrapper {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrolling-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Product card */
+.product-card {
+  scroll-snap-align: center;
+  will-change: transform;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+}
