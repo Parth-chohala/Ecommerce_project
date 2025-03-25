@@ -32,7 +32,7 @@ const addcustomer = (req, res) => {
       req.body.customer_email,
       req.body.customer_password,
       req.body.customer_phone,
-      req.body.customer_status,
+      1,
       req.body.shipping_address
     ],
     (err, data) => {
