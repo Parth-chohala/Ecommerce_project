@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+
+import {
+  Addtowishlist,
+  Is_in_wishlist,
+  getwishlist,
+} from "../Hooks/useWishlist";
+import { get_Cart_Items, Add_to_cart, Is_in_cart } from "../Hooks/Usecart";
+
 export default function Product_listing() {
   const imgurl = `http://localhost:1009/images/`;
 
@@ -10,7 +18,9 @@ export default function Product_listing() {
   const [productsPerPage] = useState(12); // Products per page
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 10000 });
   const [viewType, setViewType] = useState("grid"); // "grid" or "list"
-
+ const [wishlistItems, setInWishlist] = useState([]);
+  const [cartItems, setcartItems] = useState([]);
+  
   useEffect(() => {
     axios
       .get("http://localhost:1009/product/for_front/productwithdetails")
@@ -23,6 +33,30 @@ export default function Product_listing() {
   const [showGoToTop, setShowGoToTop] = useState(false);
 
   useEffect(() => {
+    getwishlist().then((data) => {
+      if (data.length > 0) {
+        setInWishlist(
+          data.map((item) => {
+            return item.product_id;
+          })
+        );
+        console.log("Response:", data);
+      } else {
+        console.log("Error fetching wishlist:", data);
+      }
+    });
+    get_Cart_Items().then((data) => {
+      if (data.length > 0) {
+        setcartItems(
+          data.map((item) => {
+            return item.product_id;
+          })
+        );
+        console.log("Response cart:", data);
+      } else {
+        console.log("Error fetching cart:", data);
+      }
+    });
     const handleScroll = () => {
       if (window.scrollY > 300) {
         setShowGoToTop(true);
@@ -38,6 +72,29 @@ export default function Product_listing() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+   const Add_to_wishlist = (id) => {
+      const responce = Addtowishlist(id);
+      responce
+        .then((data) => {
+          if (data) {
+            setInWishlist([...wishlistItems, id]);
+          }
+        })
+        .catch((e) => {
+          console.log("error in add to wishlist :", e);
+        });
+    };
+    const addtocart = (id) => {
+      Add_to_cart(id)
+        .then((data) => {
+          if (data) {
+            setcartItems([...cartItems, id]);
+          }
+        })
+        .catch((e) => {
+          console.log("error in add to cart :", e);
+        });
+    };
 
   // Filter products by price
   const applyFilters = () => {
@@ -168,42 +225,59 @@ export default function Product_listing() {
                   currentProducts.map((product) =>
                     viewType === "grid" ? (
                       // Grid View
-                      <div
-                        className="col-lg-4 col-md-6 col-sm-6 d-flex"
-                        key={product.id}
-                      >
+                      <div className="col-lg-4 col-md-6 col-sm-6 d-flex" key={product.id}>
+                      <div className="card w-100 my-2 shadow-2-strong">
+                        {/* Clickable area: image + title + description */}
                         <Link
                           to={`/product_detail/${product.product_id}`}
-                          style={{ textDecoration: "none", color: "inherit" }} // Remove default link styling
+                          style={{ textDecoration: "none", color: "inherit" }}
                         >
-                          <div className="card w-100 my-2 shadow-2-strong">
-                            <img
-                              src={imgurl + product.product_image_main}
-                              className="card-img-top"
-                              alt={product.name}
-                              style={{ height: "200px", objectFit: "cover" }}
-                            />
-                            <div className="card-body d-flex flex-column">
-                              <h5 className="card-title mb-1">
-                                {product.name}
-                              </h5>
-                              <h6 className="text-primary">${product.price}</h6>
-                              <p className="card-text small">
-                                {product.description.substring(0, 60)}...
-                              </p>
-                              <div className="card-footer d-flex align-items-end pt-3 px-0 pb-0 mt-auto">
-                                <a
-                                  href="#!"
-                                  className="btn btn-primary shadow-0 me-1"
-                                >
-                                <i className="fa fa-shopping-cart me-2"></i>
-                                  Add to cart
-                                </a>
-                              </div>
-                            </div>
+                          <img
+                            src={imgurl + product.product_image_main}
+                            className="card-img-top"
+                            alt={product.name}
+                            style={{ height: "200px", objectFit: "cover" }}
+                          />
+                          <div className="card-body d-flex flex-column">
+                            <h5 className="card-title mb-1">{product.name}</h5>
+                            <h6 className="text-primary">${product.price}</h6>
+                            <p className="card-text small">{product.description.substring(0, 60)}...</p>
                           </div>
                         </Link>
+                    
+                        {/* Buttons section */}
+                        <div className="card-body d-flex flex-column gap-2">
+                          <button
+                            className={`btn w-100 shadow-sm ${
+                              cartItems.includes(product.product_id)
+                                ? "btn-outline-primary disabled"
+                                : "btn-primary text-white"
+                            }`}
+                            onClick={() => addtocart(product.product_id)}
+                          >
+                            <i className="fa fa-shopping-cart me-2"></i>
+                            {cartItems.includes(product.product_id) ? "Added to Cart" : "Add to Cart"}
+                          </button>
+                    
+                          <button
+                            className={`btn w-100 ${
+                              wishlistItems.includes(product.product_id)
+                                ? "btn-danger disabled"
+                                : "btn-outline-secondary"
+                            }`}
+                            onClick={() => Add_to_wishlist(product.product_id)}
+                          >
+                            <i
+                              className={`fas fa-heart me-2 ${
+                                wishlistItems.includes(product.product_id) ? "text-white" : "text-danger"
+                              }`}
+                            ></i>
+                            {wishlistItems.includes(product.product_id) ? "Wishlisted" : "Add to Wishlist"}
+                          </button>
+                        </div>
                       </div>
+                    </div>
+                    
                     ) : (
                       // List View
                       <div className="col-12 d-flex mb-3" key={product.id}>

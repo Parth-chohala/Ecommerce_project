@@ -1,342 +1,273 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import { get_Cart_Items } from "../Hooks/Usecart";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// MUI imports
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  CircularProgress,
+} from "@mui/material";
+
+// Confetti effect
+import Confetti from "react-confetti";
 
 export default function Checkout() {
+  const [cartItems, setCartItems] = useState([]);
+  const [userInfo, setUserInfo] = useState({});
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [total, setTotal] = useState(0);
+  const [hide, sethide] = useState(true);
+  // Loading + Dialog states
+  const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Fetch Cart Items
+  useEffect(() => {
+    get_Cart_Items().then((items) => {
+      setCartItems(items);
+      calculateTotal(items);
+    });
+  }, []);
+
+  // Fetch User Info
+  useEffect(() => {
+    axios.get("http://localhost:1009/customer/1").then((res) => {
+      // console.log(res.data[0]);
+      setUserInfo(res.data[0]);
+      setShippingAddress(res.data[0].shipping_address || "");
+    });
+  }, []);
+
+  // Calculate total (with 2 decimals)
+  const calculateTotal = (items) => {
+    const totalAmount = items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+    setTotal(totalAmount);
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = (index, quantity) => {
+    const updatedCart = [...cartItems];
+    updatedCart[index].quantity = quantity;
+    setCartItems(updatedCart);
+    calculateTotal(updatedCart);
+  };
+
+  // Checkout
+  const handleCheckout = () => {
+    if (!shippingAddress.trim()) {
+      toast.error("Shipping address is required!");
+      return;
+    }
+    // Start loading
+    setLoading(true);
+    let obj = {
+      customer_id: userInfo.customer_id,
+      shipping_address: shippingAddress,
+      total_amount: total.toFixed(2),
+      cart_items: cartItems.map((item) => ({
+        cart_id: item.cart_id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    };
+    // console.log("Checkout object : ", obj);
+
+    axios.post("http://localhost:1009/orders", obj).then((res) => {
+      // console.log("Checkout responce :",res);
+      setCartItems([]);
+      // // Simulate an async request
+      setTimeout(() => {
+        setLoading(false);
+        setDialogOpen(true);
+        sethide(false);
+      }, 2000);
+
+
+    }).catch((err) => {console.error("Error in orders : ",err);});
+  };
+
+  // Auto-close dialog after 3 seconds
+  useEffect(() => {
+    if (dialogOpen) {
+      const timer = setTimeout(() => {
+        setDialogOpen(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [dialogOpen]);
+
+  // Close dialog (if user clicks close earlier)
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
   return (
-    <div>
-      <>
- 
-  <section className="bg-light py-5">
-    <div className="container">
-      <div className="row">
-        <div className="col-xl-8 col-lg-8 mb-4">
-          <div className="card mb-4 border shadow-0">
-            <div className="p-4 d-flex justify-content-between">
-              <div className="">
-                <h5>Have an account?</h5>
-                <p className="mb-0 text-wrap ">
-                  Lorem ipsum dolor sit amet, consectetur adipisicing elit
-                </p>
-              </div>
-              <div className="d-flex align-items-center justify-content-center flex-column flex-md-row">
-                <a
-                  href="#"
-                  className="btn btn-outline-primary me-0 me-md-2 mb-2 mb-md-0 w-100"
-                >
-                  Register
-                </a>
-                <a
-                  href="#"
-                  className="btn btn-primary shadow-0 text-nowrap w-100"
-                >
-                  Sign in
-                </a>
-              </div>
-            </div>
-          </div>
-          {/* Checkout */}
-          <div className="card shadow-0 border">
-            <div className="p-4">
-              <h5 className="card-title mb-3">Guest checkout</h5>
-              <div className="row">
-                <div className="col-6 mb-3">
-                  <p className="mb-0">First name</p>
-                  <div className="form-outline">
-                    <input
-                      type="text"
-                      id="typeText"
-                      placeholder="Type here"
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-                <div className="col-6">
-                  <p className="mb-0">Last name</p>
-                  <div className="form-outline">
-                    <input
-                      type="text"
-                      id="typeText"
-                      placeholder="Type here"
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-                <div className="col-6 mb-3">
-                  <p className="mb-0">Phone</p>
-                  <div className="form-outline">
-                    <input
-                      type="tel"
-                      id="typePhone"
-                      defaultValue={+48}
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-                <div className="col-6 mb-3">
-                  <p className="mb-0">Email</p>
-                  <div className="form-outline">
-                    <input
-                      type="email"
-                      id="typeEmail"
-                      placeholder="example@gmail.com"
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  defaultValue=""
-                  id="flexCheckDefault"
+    <div className="container py-5">
+      <ToastContainer />
+      <h2>Checkout </h2>
+
+      {/* User Info and Address */}
+      <div className="card p-4 mb-4">
+        <h5>User Information</h5>
+        <p>Name: {userInfo.customer_name}</p>
+        <p>Email: {userInfo.customer_email}</p>
+        <p>Phone: {userInfo.customer_phone}</p>
+        <h5 className="mt-3">Shipping Address</h5>
+        <textarea
+          className="form-control"
+          placeholder="Enter shipping address"
+          value={shippingAddress}
+          onChange={(e) => setShippingAddress(e.target.value)}
+        />
+      </div>
+
+      {/* Two Column Layout */}
+     { hide && <div className="row">
+        {/* Products Column */}
+        <div className="col-md-8">
+          <div className="card p-4 mb-4">
+            <h5>Items in Cart</h5>
+            {cartItems.map((item, index) => (
+              <div
+                key={item.cart_id}
+                className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3"
+              >
+                {/* Product Image */}
+                <img
+                  src={`http://localhost:1009/images/${item.product_image_main}`}
+                  alt={item.name}
+                  style={{ width: "80px", height: "80px", objectFit: "cover" }}
+                  className="me-3"
                 />
-                <label className="form-check-label" htmlFor="flexCheckDefault">
-                  Keep me up to date on news
-                </label>
-              </div>
-              <hr className="my-4" />
-              <h5 className="card-title mb-3">Shipping info</h5>
-              <div className="row mb-3">
-                <div className="col-lg-4 mb-3">
-                  {/* Default checked radio */}
-                  <div className="form-check h-100 border rounded-3">
-                    <div className="p-3">
+
+                {/* Product Details */}
+                <div className="flex-grow-1 d-flex flex-column">
+                  <p className="fw-bold mb-1">{item.name}</p>
+                  <div className="d-flex align-items-center gap-3">
+                    <small className="mb-0">Price: ${item.price}</small>
+                    <div className="d-flex align-items-center">
+                      <span className="me-1">Qty:</span>
                       <input
-                        className="form-check-input"
-                        type="radio"
-                        name="flexRadioDefault"
-                        id="flexRadioDefault1"
-                        defaultChecked=""
+                        type="number"
+                        min="1"
+                        style={{
+                          width: "60px",
+                          height: "23px", // <--- Slightly smaller height
+                          padding: "0 5px", //  <--- Adjust padding to taste
+                        }}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            index,
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        // style={{ width: "60px" }}
                       />
-                      <label
-                        className="form-check-label"
-                        htmlFor="flexRadioDefault1"
-                      >
-                        Express delivery <br />
-                        <small className="text-muted">
-                          3-4 days via Fedex{" "}
-                        </small>
-                      </label>
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-4 mb-3">
-                  {/* Default radio */}
-                  <div className="form-check h-100 border rounded-3">
-                    <div className="p-3">
-                      <input
-                        className="form-check-input"
-                        type="radio"
-                        name="flexRadioDefault"
-                        id="flexRadioDefault2"
-                      />
-                      <label
-                        className="form-check-label"
-                        htmlFor="flexRadioDefault2"
-                      >
-                        Post office <br />
-                        <small className="text-muted">
-                          20-30 days via post{" "}
-                        </small>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-lg-4 mb-3">
-                  {/* Default radio */}
-                  <div className="form-check h-100 border rounded-3">
-                    <div className="p-3">
-                      <input
-                        className="form-check-input"
-                        type="radio"
-                        name="flexRadioDefault"
-                        id="flexRadioDefault3"
-                      />
-                      <label
-                        className="form-check-label"
-                        htmlFor="flexRadioDefault3"
-                      >
-                        Self pick-up <br />
-                        <small className="text-muted">Come to our shop </small>
-                      </label>
-                    </div>
-                  </div>
+
+                {/* Total per product (2 decimals) */}
+                <div className="fw-bold">
+                  ${(item.price * item.quantity).toFixed(2)}
                 </div>
               </div>
-              <div className="row">
-                <div className="col-sm-8 mb-3">
-                  <p className="mb-0">Address</p>
-                  <div className="form-outline">
-                    <input
-                      type="text"
-                      id="typeText"
-                      placeholder="Type here"
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-                <div className="col-sm-4 mb-3">
-                  <p className="mb-0">City</p>
-                  <select className="form-select">
-                    <option value={1}>New York</option>
-                    <option value={2}>Moscow</option>
-                    <option value={3}>Samarqand</option>
-                  </select>
-                </div>
-                <div className="col-sm-4 mb-3">
-                  <p className="mb-0">House</p>
-                  <div className="form-outline">
-                    <input
-                      type="text"
-                      id="typeText"
-                      placeholder="Type here"
-                      className="form-control"
-                    />
-                  </div>
-                </div>
-                <div className="col-sm-4 col-6 mb-3">
-                  <p className="mb-0">Postal code</p>
-                  <div className="form-outline">
-                    <input type="text" id="typeText" className="form-control" />
-                  </div>
-                </div>
-                <div className="col-sm-4 col-6 mb-3">
-                  <p className="mb-0">Zip</p>
-                  <div className="form-outline">
-                    <input type="text" id="typeText" className="form-control" />
-                  </div>
-                </div>
-              </div>
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  defaultValue=""
-                  id="flexCheckDefault1"
-                />
-                <label className="form-check-label" htmlFor="flexCheckDefault1">
-                  Save this address
-                </label>
-              </div>
-              <div className="mb-3">
-                <p className="mb-0">Message to seller</p>
-                <div className="form-outline">
-                  <textarea
-                    className="form-control"
-                    id="textAreaExample1"
-                    rows={2}
-                    defaultValue={""}
-                  />
-                </div>
-              </div>
-              <div className="float-end">
-                <button className="btn btn-light border">Cancel</button>
-                <button className="btn btn-success shadow-0 border">
-                  Continue
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-          {/* Checkout */}
         </div>
-        <div className="col-xl-4 col-lg-4 d-flex justify-content-center justify-content-lg-end">
-          <div className="ms-lg-4 mt-4 mt-lg-0" style={{ maxWidth: 320 }}>
-            <h6 className="mb-3">Summary</h6>
-            <div className="d-flex justify-content-between">
-              <p className="mb-2">Total price:</p>
-              <p className="mb-2">$195.90</p>
-            </div>
-            <div className="d-flex justify-content-between">
-              <p className="mb-2">Discount:</p>
-              <p className="mb-2 text-danger">- $60.00</p>
-            </div>
-            <div className="d-flex justify-content-between">
-              <p className="mb-2">Shipping cost:</p>
-              <p className="mb-2">+ $14.00</p>
-            </div>
+
+        {/* Total & Checkout Column */}
+        <div className="col-md-4">
+          <div className="card p-4 sticky-top" style={{ top: "80px" }}>
+            <h5>Order Summary</h5>
             <hr />
-            <div className="d-flex justify-content-between">
-              <p className="mb-2">Total price:</p>
-              <p className="mb-2 fw-bold">$149.90</p>
-            </div>
-            <div className="input-group mt-3 mb-4">
-              <input
-                type="text"
-                className="form-control border"
-                name=""
-                placeholder="Promo code"
-              />
-              <button className="btn btn-light text-primary border">
-                Apply
-              </button>
-            </div>
-            <hr />
-            <h6 className="text-dark my-4">Items in cart</h6>
-            <div className="d-flex align-items-center mb-4">
-              <div className="me-3 position-relative">
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill badge-secondary">
-                  1
-                </span>
-                <img
-                  src="https://mdbootstrap.com/img/bootstrap-ecommerce/items/7.webp"
-                  style={{ height: 96, width: "96x" }}
-                  className="img-sm rounded border"
-                />
-              </div>
-              <div className="">
-                <a href="#" className="nav-link">
-                  Gaming Headset with Mic <br />
-                  Darkblue color
-                </a>
-                <div className="price text-muted">Total: $295.99</div>
-              </div>
-            </div>
-            <div className="d-flex align-items-center mb-4">
-              <div className="me-3 position-relative">
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill badge-secondary">
-                  1
-                </span>
-                <img
-                  src="https://mdbootstrap.com/img/bootstrap-ecommerce/items/5.webp"
-                  style={{ height: 96, width: "96x" }}
-                  className="img-sm rounded border"
-                />
-              </div>
-              <div className="">
-                <a href="#" className="nav-link">
-                  Apple Watch Series 4 Space <br />
-                  Large size
-                </a>
-                <div className="price text-muted">Total: $217.99</div>
-              </div>
-            </div>
-            <div className="d-flex align-items-center mb-4">
-              <div className="me-3 position-relative">
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill badge-secondary">
-                  3
-                </span>
-                <img
-                  src="https://mdbootstrap.com/img/bootstrap-ecommerce/items/1.webp"
-                  style={{ height: 96, width: "96x" }}
-                  className="img-sm rounded border"
-                />
-              </div>
-              <div className="">
-                <a href="#" className="nav-link">
-                  GoPro HERO6 4K Action Camera - Black
-                </a>
-                <div className="price text-muted">Total: $910.00</div>
-              </div>
-            </div>
+            <h5>Total: ${total.toFixed(2)}</h5>
+            <Button
+              variant="contained"
+              color="success"
+              className="w-100 mt-3"
+              onClick={handleCheckout}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={20} sx={{ color: "white", mr: 1 }} />
+                  Processing...
+                </>
+              ) : (
+                "Checkout"
+              )}
+            </Button>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-  {/* Footer */}
-  
-</>
+}
+      {/* MUI Success Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        PaperProps={{
+          style: {
+            backgroundColor: "#bbdefb", // Light blue
+            color: "#0d47a1",
+            minHeight: "400px",
+            padding: "2rem",
+          },
+        }}
+      >
+        {/* Confetti */}
+        <Confetti
+          style={{ position: "fixed", top: 0, left: 0, zIndex: 9999 }}
+          numberOfPieces={150}
+          recycle={false}
+        />
 
+        <DialogTitle
+          sx={{
+            backgroundColor: "#bbdefb",
+            color: "#0d47a1",
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          Order Status
+        </DialogTitle>
+
+        <DialogContent sx={{ textAlign: "center" }}>
+          {/* Success GIF / Video */}
+          <video
+            autoPlay
+            loop
+            muted
+            src={"/done1.mp4"}
+            style={{ width: "200px", marginBottom: "1rem" }}
+          />
+          <p>Your order has been placed successfully!</p>
+        </DialogContent>
+
+        <DialogActions
+          sx={{ backgroundColor: "#bbdefb", justifyContent: "center" }}
+        >
+          <Button
+            onClick={handleCloseDialog}
+            variant="contained"
+            style={{ backgroundColor: "#bbdefb", color: "#0d47a1" }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
-  )
+  );
 }

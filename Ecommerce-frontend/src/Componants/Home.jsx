@@ -132,68 +132,66 @@ export default function Home() {
             initial="hidden"
             animate="visible"
           >
-            {products.map((item, index) => (
-              <div className="col-lg-3 col-md-6 col-sm-6 d-flex" key={index}>
-                <motion.div
-                  className="card w-100 my-2 shadow-2-strong"
-                  whileHover={{ scale: 1.03 }}
-                >
-                  <Link
-                    to={`/product_detail/${item.product_id}`}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <img
-                      src={imgurl + item.product_image_main}
-                      className="card-img-top"
-                      style={{ aspectRatio: "1 / 1", objectFit: "cover" }}
-                      alt={`Product ${item.name}`}
-                    />
-                    <div className="card-body d-flex flex-column">
-                      <h5 className="card-title">{item.name}</h5>
-                      <p className="card-text">${item.price}</p>
-                    </div>
-                  </Link>
-                  <div className="card-footer d-flex justify-content-center align-items-center pt-3 pb-3">
-                    <span
-                      className={`btn btn-sm shadow-sm px-3 py-2 d-flex align-items-center justify-content-center ${
-                        cartItems.includes(item.product_id)
-                          ? "btn-light text-primary border border-primary disabled"
-                          : "btn-primary text-white border border-primary"
-                      }`}
-                      onClick={() => addtocart(item.product_id)}
-                      style={{
-                        minWidth: "50px",
-                        fontSize: "10px",
-                        // borderRadius: "6px",
-                      }}
-                    >
-                      <i className="fa fa-shopping-cart me-2"></i>
-                      {cartItems.includes(item.product_id)
-                        ? "Added to Cart"
-                        : "Add to Cart"}
-                    </span>
+          {products.map((item, index) => (
+  <div className="col-lg-3 col-md-6 col-sm-6 d-flex" key={index}>
+    <motion.div
+      className="card w-100 my-2 shadow-2-strong"
+      whileHover={{ scale: 1.03 }}
+    >
+      {/* Clickable part: Image + Name + Price + Description */}
+      <Link
+        to={`/product_detail/${item.product_id}`}
+        style={{ textDecoration: "none", color: "inherit" }}
+      >
+        <img
+          src={imgurl + item.product_image_main}
+          className="card-img-top"
+          style={{ aspectRatio: "1 / 1", objectFit: "cover" }}
+          alt={`Product ${item.name}`}
+        />
+        <div className="card-body d-flex flex-column">
+          <h5 className="card-title">{item.name}</h5>
+          <h6 className="text-primary">${item.price}</h6>
+          <p className="card-text small">
+            {item.description?.substring(0, 60)}...
+          </p>
+        </div>
+      </Link>
 
-                    <span
-                      key={wishlistItems}
-                      className={`btn border px-3 py-2 icon-hover ${
-                        wishlistItems.includes(item.product_id)
-                          ? "btn-danger disabled"
-                          : "btn-light"
-                      }`}
-                      onClick={() => Add_to_wishlist(item.product_id)}
-                    >
-                      <i
-                        className={`fas fa-heart fa-lg ${
-                          wishlistItems.includes(item.product_id)
-                            ? "text-white"
-                            : "text-secondary"
-                        }`}
-                      ></i>
-                    </span>
-                  </div>
-                </motion.div>
-              </div>
-            ))}
+      {/* Buttons in two rows */}
+      <div className="card-body d-flex flex-column gap-2">
+        <button
+          className={`btn w-100 shadow-sm ${
+            cartItems.includes(item.product_id)
+              ? "btn-outline-primary disabled"
+              : "btn-primary text-white"
+          }`}
+          onClick={() => addtocart(item.product_id)}
+        >
+          <i className="fa fa-shopping-cart me-2"></i>
+          {cartItems.includes(item.product_id) ? "Added to Cart" : "Add to Cart"}
+        </button>
+
+        <button
+          className={`btn w-100 ${
+            wishlistItems.includes(item.product_id)
+              ? "btn-danger disabled"
+              : "btn-outline-secondary"
+          }`}
+          onClick={() => Add_to_wishlist(item.product_id)}
+        >
+          <i
+            className={`fas fa-heart me-2 ${
+              wishlistItems.includes(item.product_id) ? "text-white" : "text-danger"
+            }`}
+          ></i>
+          {wishlistItems.includes(item.product_id) ? "Wishlisted" : "Add to Wishlist"}
+        </button>
+      </div>
+    </motion.div>
+  </div>
+))}
+
           </motion.div>
         </div>
       </section>
@@ -215,22 +213,22 @@ export default function Home() {
               {
                 title: "Top Customer Support",
                 description: "24/7 customer support for all your needs.",
-                gif: "/customerservice.mp4",
-                // gif: "/undraw_chat-bot_44el.png",
+                // gif: "/customerservice.mp4",
+                gif: "/undraw_chat-bot_44el.png",
               },
               {
                 title: "Fast Delivery",
                 description: "Super-fast shipping and quick deliveries!",
-                // gif: "/undraw_delivery-truck_mjui.png",
-                gif: "/delivery.mp4",
+                gif: "/undraw_delivery-truck_mjui.png",
+                // gif: "/delivery.mp4",
                 // gif:"https://lottie.host/5cde0f57-4e9c-4348-b60b-3a376df618ec/fQfrJdg96Z.lottie";
               },
               
               {
                 title: "Best Deals",
                 description: "Get the best prices on the latest products.",
-                // gif: "/undraw_online-groceries_n03y.png",
-                gif: "/6915881_Motion Graphics_Motion Graphic_3840x2160.mp4",
+                gif: "/undraw_online-groceries_n03y.png",
+                // gif: "/6915881_Motion Graphics_Motion Graphic_3840x2160.mp4",
               },
             ].map((feature, idx) => (
               <motion.div
@@ -239,7 +237,7 @@ export default function Home() {
                 variants={scaleIn}
               >
                 <div className="card border-0 shadow-sm h-100 d-flex flex-column align-items-center text-center p-3">
-                  <video
+                  <img
                     src={feature.gif}
                     alt={feature.title}
                     style={{
@@ -248,8 +246,7 @@ export default function Home() {
                       objectFit: "contain",
                     }}
                     className="mb-3"
-                    autoPlay
-                    loop
+                
                   />
                   <h6 className="fw-bold">{feature.title}</h6>
                   <p>{feature.description}</p>
