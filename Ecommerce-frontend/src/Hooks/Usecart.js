@@ -1,7 +1,8 @@
 // import { useState, useEffect } from "react";
 import axios from "axios";
+import { User_id_provider } from "./Userinfo";
 
-const User_id = 1;
+const User_id = User_id_provider();
 const get_Cart_Items = async () => {
   const responce = await axios.get(
     "http://localhost:1009/cart/with_details/" + User_id

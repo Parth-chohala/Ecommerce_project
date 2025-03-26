@@ -6,6 +6,8 @@ import axios from "axios";
 import Review_tile from "./Review_tile";
 import { Addtowishlist, Is_in_wishlist } from "../Hooks/useWishlist";
 import { Add_to_cart, Is_in_cart } from "../Hooks/Usecart";
+import { User_id_provider } from "../Hooks/Userinfo";
+import AuthDialog from "./Authpage";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -15,6 +17,9 @@ const ProductDetails = () => {
   const [product, setProduct] = useState({});
   const [inWishlist, setInWishlist] = useState(false);
   const [Incart, setIncart] = useState(false);
+   const [loggedIn, setLoggedIn] = useState(User_id_provider());
+    const [showAuthDialog, setShowAuthDialog] = useState(false); // Show authentication dialog
+  
   const [quantity, setquantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null); // State for selected image
   const [reviewsAvg, setreviewsAvg] = useState({
@@ -66,6 +71,10 @@ const ProductDetails = () => {
     });
   }, [id]);
   const addToWishlist = () => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
     if (!inWishlist) {
       Addtowishlist(id).then(() => setInWishlist(true));
     }
@@ -102,6 +111,10 @@ const ProductDetails = () => {
     return stars;
   };
   const addtocart = () => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
     Add_to_cart(id, quantity).then((res) => {
       setIncart(res);
     });
@@ -110,6 +123,12 @@ const ProductDetails = () => {
   // setSelectedImage(imgurl + product.product_image_main);
   return (
     <div className="container my-5">
+       {showAuthDialog && (
+        <AuthDialog
+          open={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
       <div className="row">
         {/* Product Image Section */}
         <aside className="col-lg-6">

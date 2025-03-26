@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import AuthDialog from "./Authpage";
 // import {is_in_wishlist } from ""
 import {
   Addtowishlist,
@@ -9,6 +10,7 @@ import {
   getwishlist,
 } from "../Hooks/useWishlist";
 import { get_Cart_Items, Add_to_cart, Is_in_cart } from "../Hooks/Usecart";
+import { User_id_provider } from "../Hooks/Userinfo";
 
 // import main from "/";
 // Animation variants
@@ -32,7 +34,8 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [wishlistItems, setInWishlist] = useState([]);
   const [cartItems, setcartItems] = useState([]);
-  
+  const [loggedIn, setLoggedIn] = useState(User_id_provider());
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // Show authentication dialog
 
   useEffect(() => {
     axios
@@ -67,6 +70,10 @@ export default function Home() {
   }, []);
 
   const Add_to_wishlist = (id) => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
     const responce = Addtowishlist(id);
     responce
       .then((data) => {
@@ -79,6 +86,10 @@ export default function Home() {
       });
   };
   const addtocart = (id) => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
     Add_to_cart(id)
       .then((data) => {
         if (data) {
@@ -92,6 +103,12 @@ export default function Home() {
   return (
     <div>
       {/* Hero Section */}
+      {showAuthDialog && (
+        <AuthDialog
+          open={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
       <section className="container text-center my-5">
         <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
           <h1 className="fw-bold text-primary">

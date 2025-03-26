@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-
+import { User_id_provider } from "../Hooks/Userinfo";
+import AuthDialog from "./Authpage";
 import {
   Addtowishlist,
   Is_in_wishlist,
@@ -20,6 +21,9 @@ export default function Product_listing() {
   const [viewType, setViewType] = useState("grid"); // "grid" or "list"
  const [wishlistItems, setInWishlist] = useState([]);
   const [cartItems, setcartItems] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(User_id_provider());
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // Show authentication dialog
+
   
   useEffect(() => {
     axios
@@ -73,6 +77,10 @@ export default function Product_listing() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
    const Add_to_wishlist = (id) => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
       const responce = Addtowishlist(id);
       responce
         .then((data) => {
@@ -85,6 +93,10 @@ export default function Product_listing() {
         });
     };
     const addtocart = (id) => {
+      if (!loggedIn) {
+        setShowAuthDialog(true);
+        return;
+      }
       Add_to_cart(id)
         .then((data) => {
           if (data) {
@@ -118,6 +130,12 @@ export default function Product_listing() {
   return (
     <div>
       <section>
+      {showAuthDialog && (
+        <AuthDialog
+          open={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
         <div className="container" style={{ marginTop: "10px" }}>
           <div className="row">
             {/* Filter Section */}

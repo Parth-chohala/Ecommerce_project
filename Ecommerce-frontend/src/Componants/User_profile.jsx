@@ -1,10 +1,23 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthDialog from "./Authpage"; // Import your AuthDialog Component
+import { User_id_provider } from "../Hooks/Userinfo";
+import { removeUser } from "../Hooks/Userinfo";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
-  const [loggedIn, setLoggedIn] = useState(false); // Change to false to test login popup
-
+  const [loggedIn, setLoggedIn] = useState(User_id_provider()); // Change to false to test login popup
+  const navigate = useNavigate();
+const handleLogout = () => {
+  setLoggedIn(false);
+  removeUser();
+  toast.success("Logged out successfully");
+  setTimeout(() => {
+    navigate("/");
+    window.location.reload();
+  }, 1500);
+}
   return (
     <>
       {loggedIn ? (
@@ -39,12 +52,13 @@ const UserProfile = () => {
                 >
                   Settings
                 </Link>
-                <Link
+                <div
                   to="/logout"
                   className="list-group-item list-group-item-action text-danger"
+                  onClick={handleLogout}
                 >
                   Logout
-                </Link>
+                </div>
               </div>
             </div>
 

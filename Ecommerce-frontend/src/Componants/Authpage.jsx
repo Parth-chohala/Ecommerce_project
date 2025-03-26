@@ -10,79 +10,202 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
+import { setUser } from "../Hooks/Userinfo";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function AuthDialog() {
-  const [open, setOpen] = useState(true);
+// Simple validators:
+const isValidEmail = (value) => {
+  // Minimal email pattern: "text@text.text"
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(value);
+};
+
+const isValidPhone = (value) => {
+  // Must be exactly 10 digits (adjust as needed)
+  const phoneRegex = /^[0-9]{10}$/;
+  return phoneRegex.test(value);
+};
+
+export default function AuthDialog({ open, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // For login: "loginInput" = Email or Phone
+  // For register: separate fields
   const [formData, setFormData] = useState({
+    loginInput: "",
+    password: "",
     fullName: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     phone: "",
     address: "",
+    confirmPassword: "",
   });
 
-  const handleClose = () => setOpen(false);
+  // Close dialog
+  const handleClose = () => {
+    if (onClose) onClose();
+  };
 
+  // Reset all input fields
+  const resetFormData = () => {
+    setFormData({
+      loginInput: "",
+      password: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      confirmPassword: "",
+    });
+    setErrors({});
+  };
+
+  // Toggle between Login and Register
+  const handleToggle = () => {
+    setIsLogin(!isLogin);
+    resetFormData(); // <--- Clear form data on switch
+  };
+
+  // Update form data and reset any existing errors
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [e.target.name]: "",
+    }));
   };
 
-  const validate = () => {
-    let newErrors = {};
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    if (!isLogin) {
-      if (!formData.fullName) newErrors.fullName = "Full Name is required";
-      if (!formData.confirmPassword)
-        newErrors.confirmPassword = "Confirm Password is required";
-      if (formData.password !== formData.confirmPassword)
-        newErrors.confirmPassword = "Passwords do not match";
-      if (!formData.phone) newErrors.phone = "Phone Number is required";
-      if (!formData.address) newErrors.address = "Shipping Address is required";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
+
+    // Clear previous errors
+    let newErrors = {};
+
+    if (isLogin) {
+      // Validate the "loginInput" for email or phone
+      if (!formData.loginInput) {
+        newErrors.loginInput = "Email or Phone is required";
+      } else if (
+        !isValidEmail(formData.loginInput) &&
+        !isValidPhone(formData.loginInput)
+      ) {
+        // If it doesn't match email AND doesn't match phone
+        newErrors.loginInput = "Invalid Email or Phone format!";
+      }
+
+      // Check password
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      }
+
+      // If we found errors, show them and STOP
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+
+      // If valid, proceed with login request
       setLoading(true);
       try {
-        if (isLogin) {
-          // Add login API call here when needed
-          console.log("Logging in...", formData);
-        } else {
-          const payload = {
-            customer_name: formData.fullName,
-            customer_email: formData.email,
-            customer_password: formData.password,
-            customer_phone: formData.phone,
-            shipping_address: formData.address,
-          };
+        // Decide if it's an email or phone
+        const isEmail = isValidEmail(formData.loginInput);
+        const payload = isEmail
+          ? {
+              customer_email: formData.loginInput,
+              customer_password: formData.password,
+            }
+          : {
+              customer_phone: formData.loginInput,
+              customer_password: formData.password,
+            };
 
-          await axios
-            .post("http://localhost:1009/customer", payload)
-            .then((res) => {
-              console.log("Registration Successful:", res.data);
-              toast.success("Registration Successful!");
-              handleClose();
-            })
-            .catch((err) => {
-              console.error("API Error:", err);
-              toast.error('Something went wrong. Please try again!');
-            });
+        // Example using GET with query params
+        const res = await axios.get("http://localhost:1009/customer/auth", {
+          params: payload,
+        });
+        if (!res.data.length) {
+          toast.error("Invalid credentials!");
+        } else {
+          // console.log("Login Successful:", res);
+          toast.success("Login Successful!");
+          setUser(res.data[0].customer_id);
+          setTimeout(() => {
+            window.location.reload(); // Reload the page after login
+            handleClose();
+          }, 2000);
         }
-      } catch (error) {
-        console.error("API Error:", error);
+      } catch (err) {
+        console.error("API Error:", err);
+        toast.error("Invalid credentials!");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // --- REGISTRATION FLOW ---
+      // Basic validations
+      if (!formData.fullName) {
+        newErrors.fullName = "Full Name is required";
+      }
+      if (!formData.email) {
+        newErrors.email = "Email is required";
+      }
+      if (!formData.password) {
+        newErrors.password = "Password is required";
+      }
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = "Confirm Password is required";
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+      if (!formData.phone) {
+        newErrors.phone = "Phone number is required";
+      } else if (formData.phone.length !== 10) {
+        // or use a regex if you want to ensure digits only:
+        // else if (!/^[0-9]{10}$/.test(formData.phone)) {
+        newErrors.phone = "Phone number must be exactly 10 digits";
+      }
+      if (!formData.address) {
+        newErrors.address = "Shipping address is required";
+      }
+
+      // If any errors, show them
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+
+      // If valid, proceed with register request
+      setLoading(true);
+      try {
+        const payload = {
+          customer_name: formData.fullName,
+          customer_email: formData.email,
+          customer_password: formData.password,
+          customer_phone: formData.phone,
+          shipping_address: formData.address,
+        };
+
+        const res = await axios.post("http://localhost:1009/customer", payload);
+        if (!res.data.insertId) {
+          toast.error("Registration Failed!");
+        } else {
+          toast.success("Registration Successful!");
+          setUser(res.data.insertId);
+          setTimeout(() => {
+            window.location.reload(); // Reload the page after login
+            handleClose();
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("API Error:", err);
         toast.error("Something went wrong. Please try again!");
       } finally {
         setLoading(false);
@@ -100,13 +223,16 @@ export default function AuthDialog() {
             onClick={handleClose}
             sx={{ position: "absolute", right: 8, top: 8, color: "grey.600" }}
           >
-            <i className="fas fa-times"></i>
+            <i className="fas fa-times" />
           </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ p: 0 }}>
           <Box
-            sx={{ display: "flex", flexDirection: { xs: "column", md: "row" } }}
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+            }}
           >
             {/* Image Section */}
             <Box
@@ -130,31 +256,49 @@ export default function AuthDialog() {
             {/* Form Section */}
             <Box sx={{ width: { xs: "100%", md: "60%" }, p: 4 }}>
               <form onSubmit={handleSubmit}>
+                {/* Registration Fields */}
                 {!isLogin && (
+                  <>
+                    <TextField
+                      label="Full Name"
+                      name="fullName"
+                      fullWidth
+                      margin="normal"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      error={!!errors.fullName}
+                      helperText={errors.fullName}
+                    />
+                    <TextField
+                      label="Email"
+                      name="email"
+                      type="email"
+                      fullWidth
+                      margin="normal"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={!!errors.email}
+                      helperText={errors.email}
+                    />
+                  </>
+                )}
+
+                {/* LOGIN Field: "Email or Phone" */}
+                {isLogin && (
                   <TextField
-                    label="Full Name"
-                    name="fullName"
+                    label="Email or Phone"
+                    name="loginInput"
+                    type="text"
                     fullWidth
                     margin="normal"
-                    value={formData.fullName}
+                    value={formData.loginInput}
                     onChange={handleChange}
-                    error={!!errors.fullName}
-                    helperText={errors.fullName}
+                    error={!!errors.loginInput}
+                    helperText={errors.loginInput}
                   />
                 )}
 
-                <TextField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  fullWidth
-                  margin="normal"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                />
-
+                {/* Password Field (used in both flows) */}
                 <TextField
                   label="Password"
                   name="password"
@@ -167,6 +311,7 @@ export default function AuthDialog() {
                   helperText={errors.password}
                 />
 
+                {/* Registration-Only Fields */}
                 {!isLogin && (
                   <>
                     <TextField
@@ -180,10 +325,10 @@ export default function AuthDialog() {
                       error={!!errors.confirmPassword}
                       helperText={errors.confirmPassword}
                     />
-
                     <TextField
                       label="Phone Number"
                       name="phone"
+                      type="text"
                       fullWidth
                       margin="normal"
                       value={formData.phone}
@@ -191,7 +336,6 @@ export default function AuthDialog() {
                       error={!!errors.phone}
                       helperText={errors.phone}
                     />
-
                     <TextField
                       label="Shipping Address"
                       name="address"
@@ -216,9 +360,9 @@ export default function AuthDialog() {
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : isLogin ? (
-                    "Login"
+                    "LOGIN"
                   ) : (
-                    "Register"
+                    "REGISTER"
                   )}
                 </Button>
               </form>
@@ -232,7 +376,7 @@ export default function AuthDialog() {
                   color: "blue",
                   textDecoration: "underline",
                 }}
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={handleToggle} // <--- Use the toggle function
               >
                 {isLogin
                   ? "Create an Account"

@@ -16,6 +16,7 @@ import {
 
 // Confetti effect
 import Confetti from "react-confetti";
+import { User_id_provider } from "../Hooks/Userinfo";
 
 export default function Checkout() {
   const [cartItems, setCartItems] = useState([]);
@@ -26,6 +27,7 @@ export default function Checkout() {
   // Loading + Dialog states
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const user_id = User_id_provider();
 
   // Fetch Cart Items
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function Checkout() {
 
   // Fetch User Info
   useEffect(() => {
-    axios.get("http://localhost:1009/customer/1").then((res) => {
+    axios.get("http://localhost:1009/customer/"+user_id).then((res) => {
       // console.log(res.data[0]);
       setUserInfo(res.data[0]);
       setShippingAddress(res.data[0].shipping_address || "");
@@ -70,7 +72,7 @@ export default function Checkout() {
     // Start loading
     setLoading(true);
     let obj = {
-      customer_id: userInfo.customer_id,
+      customer_id: user_id,
       shipping_address: shippingAddress,
       total_amount: total.toFixed(2),
       cart_items: cartItems.map((item) => ({

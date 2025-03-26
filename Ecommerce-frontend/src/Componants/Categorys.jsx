@@ -2,8 +2,9 @@ import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { get_Cart_Items, Add_to_cart, Is_in_cart } from "../Hooks/Usecart";
-
 import { Link } from "react-router-dom";
+import { User_id_provider } from "../Hooks/Userinfo";
+import AuthDialog from "./Authpage";
 const Category = () => {
   const imgurl = `http://localhost:1009/images/`;
   const [categories, setCategories] = useState([]);
@@ -12,6 +13,8 @@ const Category = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const productsSectionRef = useRef(null); // For scrolling to products section
   const [cartItems, setcartItems] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(User_id_provider());
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // Show authentication dialog
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -63,6 +66,10 @@ const Category = () => {
    
   }, []);
    const addtocart = (id) => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
       Add_to_cart(id)
         .then((data) => {
           if (data) {
@@ -82,6 +89,12 @@ const Category = () => {
   return (
     <>
       {/* Category Section */}
+       {showAuthDialog && (
+              <AuthDialog
+                open={showAuthDialog}
+                onClose={() => setShowAuthDialog(false)}
+              />
+            )}
       <div className="container my-5">
         <h3>Product Categories</h3>
         <div className="row mt-4">

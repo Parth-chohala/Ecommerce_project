@@ -80,11 +80,39 @@ const deletecustomer = (req, res) => {
     }
   });
 };
+const get_user_auth = (req, res) => {
+  let queryString = "";
+
+
+  // 1) Check if the request has customer_email
+  if (req.query.customer_email) {
+    queryString =`SELECT customer_id FROM customers WHERE customer_email = "${req.query.customer_email}" AND customer_password = "${req.query.customer_password}"`;
+
+  // 2) Else check if the request has customer_phone
+  } else if (req.query.customer_phone) {
+    queryString = `SELECT customer_id FROM customers WHERE customer_phone = ${req.query.customer_phone} AND customer_password = "${req.query.customer_password}"`;
+
+  } else {
+    // 3) If neither, return a 400 (Bad Request)
+    return res.status(400).json({
+      error: "Missing customer_email or customer_phone in query parameters",
+    });
+  }
+  // 4) Run the query
+  db.query(queryString,(err, data) => {
+    if (err) {
+      return res.status(500).json({ error: err.message || err });
+    }
+    return res.json(data);
+  });
+};
+
 
 module.exports = {
     getcustomers,
     getcustomer,
     addcustomer,
+    get_user_auth,
     updatecustomer,
     deletecustomer,
 }

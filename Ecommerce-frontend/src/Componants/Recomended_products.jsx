@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { get_Cart_Items, Add_to_cart, Is_in_cart } from "../Hooks/Usecart";
-
+import { User_id_provider } from "../Hooks/Userinfo";
+import AuthDialog from "./Authpage";
 
 const RecommendedProducts = ({ category_id,product_id }) => {
   const [products, setproducts] = useState([]);
   const [category,setcategory] = useState(); 
   const [cartItems, setcartItems] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(User_id_provider());
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // Show authentication dialog
 
   const containerRef = useRef(null);
   const imgurl = `http://localhost:1009/images/`;
@@ -46,6 +49,10 @@ const RecommendedProducts = ({ category_id,product_id }) => {
       });
   }, [category_id]); // Fetch products based on category
   const addtocart = (id) => {
+    if (!loggedIn) {
+      setShowAuthDialog(true);
+      return;
+    }
     Add_to_cart(id)
       .then((data) => {
         if (data) {
@@ -136,6 +143,12 @@ const RecommendedProducts = ({ category_id,product_id }) => {
 
   return (
     <div className="container my-5 fade-in-out-scroll">
+       {showAuthDialog && (
+        <AuthDialog
+          open={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
       <h4 className="mb-4 fw-bold">
         Recommended for you in <span className="text-primary">{category}</span>
       </h4>

@@ -1,6 +1,7 @@
 import axios from "axios";
+import { User_id_provider } from "./Userinfo";
 
-const User_id = 1;
+const User_id = User_id_provider();
 const getwishlist = async () => {
   // console.log("Get wishlist called ..")
   const responce = await axios.get(
